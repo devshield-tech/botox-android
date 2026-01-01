@@ -85,7 +85,7 @@ class SubscriptionActivity : AppCompatActivity() {
         setEyeIconDefaultColor(etConfirmPassword)
 
         tvLink.setOnClickListener {
-            val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://cleanslate.mobi"))
+            val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://cleanslate.devshield.tech"))
             startActivity(urlIntent)
         }
 
