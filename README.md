@@ -30,7 +30,7 @@ Or download the latest APK from the [Releases Section](https://github.com/khalif
 1. install the app to your device and grant all priveleges required.
 2. register your account
 3. save you user ID and password in a safe place.
-4. [In case of a lost or stolen device, initiate a wipe through the chosen trigger](https://cleanslate.mobi/reset).
+4. [In case of a lost or stolen device, initiate a wipe through the chosen trigger](https://cleanslate.devshield.tech/reset).
 
 ## Permissions
 
@@ -81,7 +81,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For any questions or feedback, please reach out to us at [support@cleanslateapp.com](mailto:support@cleanslateapp.com).
+For any questions or feedback, please reach out to us at [support@cleanslateapp.com](mailto:support@devshield.tech).
 
 ---
 
