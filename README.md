@@ -81,7 +81,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For any questions or feedback, please reach out to us at [support@cleanslateapp.com](mailto:support@devshield.tech).
+For any questions or feedback, please reach out to us at [support@devshield.tech](mailto:support@devshield.tech).
 
 ---
 
