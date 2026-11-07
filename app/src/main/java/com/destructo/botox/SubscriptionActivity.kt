@@ -44,6 +44,7 @@ class SubscriptionActivity : AppCompatActivity() {
     private var isConfirmPasswordVisible = false
     private lateinit var btnSubmit: Button
     private lateinit var apiService: ApiService
+    private var isSubmitting = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +92,10 @@ class SubscriptionActivity : AppCompatActivity() {
 
 
         btnSubmit.setOnClickListener {
+            // Ignore repeated taps while a registration request is in flight,
+            // otherwise the same subscription code can be consumed twice.
+            if (isSubmitting) return@setOnClickListener
+
             val subscriptionCode = etSubscriptionCode.text.toString().trim()
             val resetCode = etPassword.text.toString().trim()
             val resetCodeConfirm = etConfirmPassword.text.toString().trim()
@@ -98,8 +103,7 @@ class SubscriptionActivity : AppCompatActivity() {
             if (validateInputs(subscriptionCode, resetCode, resetCodeConfirm)) {
                 val randomPassword = UUID.randomUUID().toString()
                 val resetCodeHash = generateHash(resetCode)
-                registerUser(subscriptionCode, resetCodeHash, randomPassword,)
-
+                registerUser(subscriptionCode, resetCodeHash, randomPassword)
             }
         }
     }
@@ -202,12 +206,25 @@ class SubscriptionActivity : AppCompatActivity() {
             addProperty("password", password)
         }
 
+        isSubmitting = true
+        btnSubmit.isEnabled = false
+
         val call = apiService.registerUser(requestBody)
         call.enqueue(object : Callback<JsonObject> {
             override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
                 if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    val userId = responseBody?.get("userId")?.asString
+                    val userId = response.body()?.get("userId")?.takeIf { !it.isJsonNull }?.asString
+                    if (userId.isNullOrBlank()) {
+                        // The server accepted the request but did not return an
+                        // account id, so we cannot finish registration safely.
+                        setSubmitting(false)
+                        Toast.makeText(
+                            this@SubscriptionActivity,
+                            "Registration failed: no user ID returned. Please try again.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return
+                    }
 
                     saveToSharedPreferences(subscriptionCode, resetCodeHash, password, userId)
 
@@ -215,23 +232,36 @@ class SubscriptionActivity : AppCompatActivity() {
                     startActivity(intent)
                     finish()
                 } else {
-                    // API error, error body'yi işleyelim
-                    try {
-                        val errorBody = response.errorBody()?.string()
-                        val jsonError = JsonParser.parseString(errorBody).asJsonObject
-                        val errorMessage = jsonError.get("message").asString
-                        Toast.makeText(this@SubscriptionActivity, errorMessage, Toast.LENGTH_SHORT).show()
+                    setSubmitting(false)
+                    val errorBody = try {
+                        response.errorBody()?.string()
                     } catch (e: Exception) {
-                        // Hata JSON formatında değilse veya başka bir hata oluşursa, genel bir hata mesajı göster
-                        Toast.makeText(this@SubscriptionActivity, "${response.message()}", Toast.LENGTH_SHORT).show()
+                        null
                     }
+                    val errorMessage = try {
+                        val jsonError = JsonParser.parseString(errorBody).asJsonObject
+                        jsonError.get("message")?.takeIf { !it.isJsonNull }?.asString
+                    } catch (e: Exception) {
+                        null
+                    }
+                    Toast.makeText(
+                        this@SubscriptionActivity,
+                        errorMessage ?: "Registration failed (${response.code()}). Please try again.",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                Toast.makeText(this@SubscriptionActivity, "An error occurred, please try again later.", Toast.LENGTH_SHORT).show()
+                setSubmitting(false)
+                Toast.makeText(this@SubscriptionActivity, "An error occurred, please try again later.", Toast.LENGTH_LONG).show()
             }
         })
+    }
+
+    private fun setSubmitting(submitting: Boolean) {
+        isSubmitting = submitting
+        if (::btnSubmit.isInitialized) btnSubmit.isEnabled = !submitting
     }
 
 private fun saveToSharedPreferences(subscriptionCode: String, resetCodeHash: String, password: String, userId: String?) {

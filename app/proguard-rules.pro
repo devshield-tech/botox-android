@@ -21,6 +21,38 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.destructo.botox.Configuration { *; }
+
+# --- Retrofit / OkHttp / Gson ---------------------------------------------
+# Retrofit resolves generic types and annotations reflectively. R8 strips the
+# Signature attribute by default, which turns Call<JsonObject> into a raw Call
+# and makes Retrofit throw:
+#   IllegalArgumentException: Unable to create call adapter for interface ...
+#   Call return type must be parameterized as Call<Foo> or Call<? extends Foo>
+-keepattributes Signature, InnerClasses, EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+-keepattributes AnnotationDefault
+
+# Keep the Retrofit service interface and its generic return types.
+-keep interface com.destructo.botox.SubscriptionActivity$ApiService { *; }
+-keep class com.destructo.botox.SubscriptionActivity$ApiService { *; }
+
+# Keep serialized/model classes so Gson can read their fields reflectively.
+-keep class com.destructo.botox.** { *; }
+
+# Retrofit, OkHttp and Okio internals.
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }
+-dontwarn retrofit2.**
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+
+# Gson reflective access.
+-keep class com.google.gson.** { *; }
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
 -keep class org.bouncycastle.** { *; }
 -dontwarn org.bouncycastle.**
 -keep class org.conscrypt.** { *; }

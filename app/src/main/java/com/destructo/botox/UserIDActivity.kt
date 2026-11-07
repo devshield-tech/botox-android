@@ -62,13 +62,8 @@ class UserIDActivity : AppCompatActivity() {
         compName = ComponentName(this, DeviceAdminReceiver::class.java)
 
 
+        // Request device admin once, only if it is not already active.
         checkAdminPermission()
-
-        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
-        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, compName)
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "This app needs device admin permissions to wipe data.")
-        startActivity(intent)
-
 
         showWelcomeMessage()
         btnResetPhone = findViewById(R.id.btn_reset_phone)

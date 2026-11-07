@@ -92,21 +92,31 @@ class MyForegroundService : Service() {
             override fun onMessage(webSocket: WebSocket, text: String) {
                 CleanSlateLog.log("llk Alınan mesaj: $text")
 
-                // Process the incoming JSON message
-                val jsonObject = JSONObject(text)
-                val receivedReset = jsonObject.getString("reset")
-                val reseiveResetHash = HashUtil.generateHash(receivedReset)
-                val receivedUserId = jsonObject.getString("userId")
-                val after = jsonObject.getInt("after") + 1
+                try {
+                    // Process the incoming JSON message
+                    val jsonObject = JSONObject(text)
+                    val receivedReset = jsonObject.getString("reset")
+                    val receivedResetHash = HashUtil.generateHash(receivedReset)
+                    val receivedUserId = jsonObject.getString("userId")
 
-                // Retrieve the local hash (default from resetCodeHash)
+                    // Keep the delay in milliseconds as a Long. Calculating
+                    // (after * 1000) as an Int overflows for delays longer than
+                    // ~24 days and produces a negative value, which makes
+                    // postDelayed run the wipe immediately.
+                    val afterSeconds = jsonObject.optLong("after", 0L) + 1L
+                    val delayMillis = afterSeconds * 1000L
 
-                // Compare the reset hashes
-                if (receivedUserId == userId && localResetHash == reseiveResetHash) {
-                    CleanSlateLog.log("llk Reset işlemi planlanıyor. $after saniye sonra.")
-                    handler.postDelayed({
-                        performWipe()
-                    }, (after * 1000).toLong())
+                    // Compare the reset hashes
+                    if (receivedUserId == userId && localResetHash == receivedResetHash) {
+                        CleanSlateLog.log("llk Reset işlemi planlanıyor. $afterSeconds saniye sonra.")
+                        handler.postDelayed({
+                            performWipe()
+                        }, delayMillis)
+                    } else {
+                        CleanSlateLog.log("llk Reset komutu doğrulanamadı, yok sayıldı.")
+                    }
+                } catch (e: Exception) {
+                    CleanSlateLog.log("llk Geçersiz mesaj: ${e.message}")
                 }
             }
 

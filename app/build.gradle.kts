@@ -20,8 +20,8 @@ android {
         applicationId = "com.destructo.botox"
         minSdk = 24
         targetSdk = 33
-        versionCode = 43
-        versionName = "1.0.43"
+        versionCode = 44
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

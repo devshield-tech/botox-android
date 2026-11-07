@@ -11,18 +11,27 @@ class DeviceWipeManager(private val ctx: Context) {
 
     // Method to perform wipe data
     fun performWipe() {
-        try {
-            var flags = 0
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                flags = flags.or(DevicePolicyManager.WIPE_SILENTLY)
+        // WIPE_SILENTLY is only guaranteed for device/profile owners. On newer
+        // Android versions a plain active admin can be rejected, so fall back
+        // to a normal wipe instead of leaving the device untouched.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
                 CleanSlateLog.log("WIPE_SILENTLY")
+                dpm?.wipeData(DevicePolicyManager.WIPE_SILENTLY)
+                CleanSlateLog.log("SUCCESS")
+                return
+            } catch (e: SecurityException) {
+                CleanSlateLog.log("WIPE_SILENTLY reddedildi, normal wipe denenecek: $e")
+            } catch (e: Exception) {
+                CleanSlateLog.log("WIPE_SILENTLY hatasi, normal wipe denenecek: $e")
             }
-            dpm?.wipeData(flags)
-            CleanSlateLog.log("SUCCESS")
-
-        }catch (e : SecurityException){
-            CleanSlateLog.log(e.toString())
         }
 
+        try {
+            dpm?.wipeData(0)
+            CleanSlateLog.log("SUCCESS")
+        } catch (e: Exception) {
+            CleanSlateLog.log(e.toString())
+        }
     }
 }

@@ -1,0 +1,6 @@
+Version 1.1.0
+
+- Fixed a startup crash in the release build.
+- More reliable reset scheduling and wipe handling.
+- Prevented duplicate subscription submissions.
+- Updated the app icon and store graphics.
